@@ -58,19 +58,19 @@ const multiStepFormSchema = z.object({
     aadhaar: z.string().min(1)
   }),
 
-  property: z.object({
-    type: z.string().min(1),
-    address: z.string().min(1),
-    surveyNo: z.string().min(1),
-    municipalNo: z.string().min(1),
-    area: z.string().min(1),
-    builtUpArea: z.string().min(1),
-    carpetArea: z.string().min(1),
-    boundaryNorth: z.string().min(1),
-    boundarySouth: z.string().min(1),
-    boundaryEast: z.string().min(1),
-    boundaryWest: z.string().min(1)
-  }),
+ property: z.object({
+  type: z.string().min(1),
+  address: z.string().min(1),
+  surveyNo: z.string().min(1),
+  municipalNo: z.string().min(1),
+  area: z.string().min(1),
+  builtUpArea: z.string().min(1),
+  carpetArea: z.string().optional(), //  FIX
+  boundaryNorth: z.string().min(1),
+  boundarySouth: z.string().min(1),
+  boundaryEast: z.string().min(1),
+  boundaryWest: z.string().min(1)
+}),
 
   financial: z.object({
     saleAmount: z.string().min(1),
