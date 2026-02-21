@@ -53,31 +53,55 @@ export default function DocumentDetails() {
 
   /* ================= TEMPLATE DYNAMIC RENDER ================= */
   const templateData = {
-    buyer_details: {
-      name: meta?.buyerName,
-      email: meta?.buyerEmail,
-    },
-    seller_details: {
-      name: meta?.sellerName,
-      email: meta?.sellerEmail,
-    },
-    property_details: {
-      address: meta?.propertyAddress,
-      price: meta?.price,
-    },
-    date: formatDate(document.createdAt),
+    agreementDay: meta?.agreementDay || formatDate(document.createdAt, "d"),
+    agreementMonth: meta?.agreementMonth || formatDate(document.createdAt, "MMMM"),
+    agreementYear: meta?.agreementYear || formatDate(document.createdAt, "yyyy"),
+    agreementPlace: meta?.agreementPlace || "[agreementPlace]",
+    stateName: meta?.stateName || "[stateName]",
+    jurisdictionCity: meta?.jurisdictionCity || "[jurisdictionCity]",
+    arbitrationCity: meta?.arbitrationCity || "[arbitrationCity]",
+    sellerName: meta?.seller?.name || meta?.sellerName || "[sellerName]",
+    sellerParentName: meta?.seller?.parentName || meta?.sellerParentName || "[sellerParentName]",
+    sellerAge: meta?.seller?.age || meta?.sellerAge || "[sellerAge]",
+    sellerOccupation: meta?.seller?.occupation || meta?.sellerOccupation || "[sellerOccupation]",
+    sellerAddress: meta?.seller?.address || meta?.sellerAddress || "[sellerAddress]",
+    sellerPAN: meta?.seller?.pan || meta?.sellerPAN || "[sellerPAN]",
+    sellerAadhaar: meta?.seller?.aadhaar || meta?.sellerAadhaar || "[sellerAadhaar]",
+    buyerName: meta?.buyer?.name || meta?.buyerName || "[buyerName]",
+    buyerParentName: meta?.buyer?.parentName || "[buyerParentName]",
+    buyerAge: meta?.buyer?.age || "[buyerAge]",
+    buyerOccupation: meta?.buyer?.occupation || "[buyerOccupation]",
+    buyerAddress: meta?.buyer?.address || "[buyerAddress]",
+    buyerPAN: meta?.buyer?.pan || "[buyerPAN]",
+    buyerAadhaar: meta?.buyer?.aadhaar || "[buyerAadhaar]",
+    propertyType: meta?.property?.type || "[propertyType]",
+    propertyAddress: meta?.property?.address || meta?.propertyAddress || "[propertyAddress]",
+    surveyNo: meta?.property?.surveyNo || "[surveyNo]",
+    municipalNo: meta?.property?.municipalNo || "[municipalNo]",
+    area: meta?.property?.area || "[area]",
+    builtUpArea: meta?.property?.builtUpArea || "[builtUpArea]",
+    carpetArea: meta?.property?.carpetArea || "[carpetArea]",
+    boundaryNorth: meta?.property?.boundaryNorth || "[boundaryNorth]",
+    boundarySouth: meta?.property?.boundarySouth || "[boundarySouth]",
+    boundaryEast: meta?.property?.boundaryEast || "[boundaryEast]",
+    boundaryWest: meta?.property?.boundaryWest || "[boundaryWest]",
+    saleAmount: meta?.financial?.saleAmount || meta?.price || "[saleAmount]",
+    saleAmountWords: meta?.financial?.saleAmountWords || "[saleAmountWords]",
+    earnestMoney: meta?.financial?.earnestMoney || "[earnestMoney]",
+    balanceAmount: meta?.financial?.balanceAmount || "[balanceAmount]",
+    paymentMode: meta?.financial?.paymentMode || "[paymentMode]",
+    reraNumber: meta?.reraNumber || "[reraNumber]",
+    stampDutyBearer: meta?.stampDutyBearer || "[stampDutyBearer]",
+    witness1Name: meta?.witness1Name || "[witness1Name]",
+    witness1Address: meta?.witness1Address || "[witness1Address]",
+    witness2Name: meta?.witness2Name || "[witness2Name]",
+    witness2Address: meta?.witness2Address || "[witness2Address]",
   };
 
   const renderedTemplate = docData.template?.content
-    ? docData.template.content.replace(/\{\{(.*?)\}\}/g, (_, key) => {
-        const keys = key.split(".");
-        let value: any = templateData;
-
-        for (const k of keys) {
-          value = value?.[k];
-        }
-
-        return value ?? `[${key}]`;
+    ? docData.template.content.replace(/\{\{(.*?)\}\}/g, (_: string, key: string) => {
+        const value = templateData[key as keyof typeof templateData];
+        return value !== undefined ? String(value) : `[${key}]`;
       })
     : null;
 

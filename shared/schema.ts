@@ -15,6 +15,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
+   role: text("role").$type<"admin" | "user">().default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -32,6 +33,8 @@ export const documents = pgTable("documents", {
   templateId: integer("template_id").references(() => templates.id).notNull(),
   status: documentStatusEnum("status").default("pending").notNull(),
   metadata: jsonb("metadata").notNull(), // Buyer, Seller, Property details
+   ownerId: integer("owner_id").references(() => users.id), // The creator/primary owner
+  viewerEmails: text("viewer_emails").array(), // Emails with view-only access
   n8nId: text("n8n_id"), // ID from n8n if available
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

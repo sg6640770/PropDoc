@@ -14,10 +14,12 @@ export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
 
   // Templates
   getTemplates(): Promise<Template[]>;
+  getTemplate(id: number): Promise<Template | undefined>;
   createTemplate(template: InsertTemplate): Promise<Template>;
 
   // Documents
@@ -48,7 +50,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async createUser(insertUser: any): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
@@ -56,6 +62,11 @@ export class DatabaseStorage implements IStorage {
   // Templates
   async getTemplates(): Promise<Template[]> {
     return await db.select().from(templates).orderBy(desc(templates.createdAt));
+  }
+
+  async getTemplate(id: number): Promise<Template | undefined> {
+    const [template] = await db.select().from(templates).where(eq(templates.id, id));
+    return template;
   }
 
   async createTemplate(template: InsertTemplate): Promise<Template> {
@@ -85,7 +96,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDocument(document: InsertDocument): Promise<Document> {
-    const [newDocument] = await db.insert(documents).values(document).returning();
+    const [newDocument] = await db.insert(documents).values({
+      ...document,
+      viewerEmails: document.viewerEmails || []
+    }).returning();
     return newDocument;
   }
 

@@ -27,8 +27,12 @@ export async function registerRoutes(
         return res.status(400).json({ message: "User already exists" });
       }
 
+      // First user becomes admin
+      const allUsers = await storage.getUsers();
+      const role = allUsers.length === 0 ? "admin" : "user";
+
       const hashedPassword = await bcrypt.hash(input.password, 10);
-      const user = await storage.createUser({ ...input, password: hashedPassword });
+      const user = await storage.createUser({ ...input, password: hashedPassword, role });
       
       const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "24h" });
       
@@ -74,6 +78,21 @@ export async function registerRoutes(
     });
   };
 
+  app.get("/api/user", (req, res) => {
+    // Re-verify token if needed or just return session user
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    jwt.verify(token, JWT_SECRET, async (err: any, decoded: any) => {
+      if (err) return res.status(403).json({ message: "Forbidden" });
+      const user = await storage.getUser(decoded.id);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    });
+  });
+
   // === TEMPLATES ===
 
   app.get(api.templates.list.path, authenticateToken, async (req, res) => {
@@ -114,21 +133,53 @@ export async function registerRoutes(
 
   // === DOCUMENTS ===
 
-  app.get(api.documents.list.path, authenticateToken, async (req, res) => {
-    const docs = await storage.getDocuments();
+  app.get(api.documents.list.path, authenticateToken, async (req: any, res) => {
+    const user = req.user;
+    let docs = await storage.getDocuments();
+    
+    if (user.role !== "admin") {
+      docs = docs.filter(d => {
+        const meta = d.metadata as any;
+        return d.ownerId === user.id || 
+               d.viewerEmails?.includes(user.email) ||
+               meta?.buyer?.email === user.email ||
+               meta?.seller?.email === user.email ||
+               meta?.buyerEmail === user.email ||
+               meta?.sellerEmail === user.email;
+      });
+    }
     res.json(docs);
   });
 
-  app.get(api.documents.get.path, authenticateToken, async (req, res) => {
-    const doc = await storage.getDocument(Number(req.params.id));
+  app.get(api.documents.get.path, authenticateToken, async (req: any, res) => {
+    const id = Number(req.params.id);
+    const doc = await storage.getDocument(id);
     if (!doc) return res.status(404).json({ message: "Document not found" });
+
+    const user = req.user;
+    const meta = doc.metadata as any;
+    const isOwner = doc.ownerId === user.id;
+    const isViewer = doc.viewerEmails?.includes(user.email);
+    const isParty = meta?.buyer?.email === user.email || 
+                    meta?.seller?.email === user.email ||
+                    meta?.buyerEmail === user.email || 
+                    meta?.sellerEmail === user.email;
+    
+    if (user.role !== "admin" && !isOwner && !isViewer && !isParty) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    
     res.json(doc);
   });
 
-  app.post(api.documents.create.path, authenticateToken, async (req, res) => {
+  app.post(api.documents.create.path, authenticateToken, async (req: any, res) => {
     try {
       const input = api.documents.create.input.parse(req.body);
-      const doc = await storage.createDocument(input);
+      const doc = await storage.createDocument({
+        ...input,
+        ownerId: req.user.id,
+        viewerEmails: [] // Initialize empty or parse from input if schema updated
+      });
 
       // Log creation
       await storage.createAuditLog({
