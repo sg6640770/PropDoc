@@ -142,8 +142,8 @@ export async function registerRoutes(
         const meta = d.metadata as any;
         return d.ownerId === user.id || 
                d.viewerEmails?.includes(user.email) ||
-               meta?.buyer?.email === user.email ||
-               meta?.seller?.email === user.email ||
+               (meta?.buyer?.email && meta.buyer.email === user.email) ||
+               (meta?.seller?.email && meta.seller.email === user.email) ||
                meta?.buyerEmail === user.email ||
                meta?.sellerEmail === user.email;
       });
@@ -197,6 +197,7 @@ export async function registerRoutes(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             documentId: doc.id,
+            creatorEmail: req.user.email,
             ...doc.metadata as object,
             templateId: doc.templateId
           })

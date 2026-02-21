@@ -168,57 +168,54 @@ export default function DocumentDetails() {
             </CardHeader>
             <CardContent>
               <dl className="grid sm:grid-cols-2 gap-6">
-                <div>
-                  <dt className="text-sm text-slate-500">
-                    Property Address
-                  </dt>
-                  <dd className="font-semibold">
-                    {meta?.propertyAddress ?? "—"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-slate-500">
-                    Sale Price
-                  </dt>
-                  <dd className="font-semibold">
-                    {meta?.price ?? "—"}
-                  </dd>
-                </div>
+  <div>
+    <dt className="text-sm text-slate-500">
+      Property Address
+    </dt>
+    <dd className="font-semibold">
+      {meta?.property?.address ?? "—"}
+    </dd>
+  </div>
 
-                <div className="sm:col-span-2 border-t pt-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="flex gap-3">
-                      <User className="w-5 h-5 text-blue-600" />
-                      <div>
-                        <p className="text-xs text-slate-500">Buyer</p>
-                        <p className="font-medium">
-                          {meta?.buyerName ?? "—"}
-                        </p>
-                        {meta?.buyerEmail && (
-                          <p className="text-xs text-slate-400">
-                            {meta.buyerEmail}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+  <div>
+    <dt className="text-sm text-slate-500">
+      Sale Price
+    </dt>
+    <dd className="font-semibold">
+      {meta?.financial?.saleAmount ?? "—"}
+    </dd>
+  </div>
 
-                    <div className="flex gap-3">
-                      <UserCheck className="w-5 h-5 text-purple-600" />
-                      <div>
-                        <p className="text-xs text-slate-500">Seller</p>
-                        <p className="font-medium">
-                          {meta?.sellerName ?? "—"}
-                        </p>
-                        {meta?.sellerEmail && (
-                          <p className="text-xs text-slate-400">
-                            {meta.sellerEmail}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </dl>
+  <div className="sm:col-span-2 border-t pt-4">
+    <div className="grid sm:grid-cols-2 gap-4">
+      <div className="flex gap-3">
+        <User className="w-5 h-5 text-blue-600" />
+        <div>
+          <p className="text-xs text-slate-500">Buyer</p>
+          <p className="font-medium">
+            {meta?.buyer?.name ?? "—"}
+          </p>
+          <p className="text-xs text-slate-400">
+            {meta?.buyer?.email ?? "—"}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <UserCheck className="w-5 h-5 text-purple-600" />
+        <div>
+          <p className="text-xs text-slate-500">Seller</p>
+          <p className="font-medium">
+            {meta?.seller?.name ?? "—"}
+          </p>
+          <p className="text-xs text-slate-400">
+            {meta?.seller?.email ?? "—"}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</dl>
             </CardContent>
           </Card>
 

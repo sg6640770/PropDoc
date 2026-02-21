@@ -40,6 +40,7 @@ const multiStepFormSchema = z.object({
 
   seller: z.object({
     name: z.string().min(1, "Seller name is required"),
+    email: z.string().email("Invalid email").min(1, "Seller email is required"),
     parentName: z.string().min(1),
     age: z.string().min(1),
     occupation: z.string().min(1),
@@ -50,6 +51,7 @@ const multiStepFormSchema = z.object({
 
   buyer: z.object({
     name: z.string().min(1, "Buyer name is required"),
+    email: z.string().email("Invalid email").min(1, "Buyer email is required"),
     parentName: z.string().min(1),
     age: z.string().min(1),
     occupation: z.string().min(1),
@@ -193,8 +195,8 @@ function CreateDocumentDialog({ open, onOpenChange }: { open: boolean, onOpenCha
       agreementDay: new Date().getDate().toString(),
       agreementMonth: format(new Date(), "MMMM"),
       agreementYear: new Date().getFullYear().toString(),
-      seller: { name: "", parentName: "", age: "", occupation: "", address: "", pan: "", aadhaar: "" },
-      buyer: { name: "", parentName: "", age: "", occupation: "", address: "", pan: "", aadhaar: "" },
+      seller: { name: "", email: "", parentName: "", age: "", occupation: "", address: "", pan: "", aadhaar: "" },
+      buyer: { name: "", email: "", parentName: "", age: "", occupation: "", address: "", pan: "", aadhaar: "" },
       property: { type: "Residential", address: "", surveyNo: "", municipalNo: "", area: "", builtUpArea: "", carpetArea: "", boundaryNorth: "", boundarySouth: "", boundaryEast: "", boundaryWest: "" },
       financial: { saleAmount: "", saleAmountWords: "", earnestMoney: "", balanceAmount: "", paymentMode: "Bank Transfer" },
       stampDutyBearer: "Buyer",
@@ -293,6 +295,10 @@ function CreateDocumentDialog({ open, onOpenChange }: { open: boolean, onOpenCha
                     <Input {...form.register("seller.name")} />
                   </div>
                   <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input {...form.register("seller.email")} type="email" />
+                  </div>
+                  <div className="space-y-2">
                     <Label>Father's / Mother's Name</Label>
                     <Input {...form.register("seller.parentName")} />
                   </div>
@@ -326,6 +332,10 @@ function CreateDocumentDialog({ open, onOpenChange }: { open: boolean, onOpenCha
                   <div className="space-y-2">
                     <Label>Name</Label>
                     <Input {...form.register("buyer.name")} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input {...form.register("buyer.email")} type="email" />
                   </div>
                   <div className="space-y-2">
                     <Label>Father's / Mother's Name</Label>
