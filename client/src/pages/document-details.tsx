@@ -1,0 +1,285 @@
+import {
+  useDocument,
+  useAuditLogs,
+  useApproveSigning,
+  useCheckSignStatus,
+} from "@/hooks/use-resources";
+import { useRoute, Link } from "wouter";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/status-badge";
+import { format, isValid } from "date-fns";
+import {
+  ArrowLeft,
+  Clock,
+  FileText,
+  Send,
+  User,
+  UserCheck,
+  RefreshCw,
+} from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+/* ================= SAFE DATE FORMATTER ================= */
+function formatDate(
+  value?: string | Date | null,
+  pattern = "PPP"
+): string {
+  if (!value) return "—";
+  const date = value instanceof Date ? value : new Date(value);
+  if (!isValid(date)) return "—";
+  return format(date, pattern);
+}
+
+export default function DocumentDetails() {
+  const [, params] = useRoute("/documents/:id");
+  const id = Number(params?.id);
+
+  const { data: document, isLoading: docLoading } = useDocument(id);
+  const { data: auditLogs, isLoading: logsLoading } = useAuditLogs(id);
+  const approveMutation = useApproveSigning();
+  const checkStatusMutation = useCheckSignStatus();
+
+  if (docLoading) return <DetailsSkeleton />;
+  if (!document) return <div>Document not found</div>;
+
+  const meta = document.metadata as any;
+  const docData = document as any;
+
+  /* ================= TEMPLATE DYNAMIC RENDER ================= */
+  const templateData = {
+    buyer_details: {
+      name: meta?.buyerName,
+      email: meta?.buyerEmail,
+    },
+    seller_details: {
+      name: meta?.sellerName,
+      email: meta?.sellerEmail,
+    },
+    property_details: {
+      address: meta?.propertyAddress,
+      price: meta?.price,
+    },
+    date: formatDate(document.createdAt),
+  };
+
+  const renderedTemplate = docData.template?.content
+    ? docData.template.content.replace(/\{\{(.*?)\}\}/g, (_, key) => {
+        const keys = key.split(".");
+        let value: any = templateData;
+
+        for (const k of keys) {
+          value = value?.[k];
+        }
+
+        return value ?? `[${key}]`;
+      })
+    : null;
+
+  return (
+    <div className="space-y-6">
+      {/* ================= HEADER ================= */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/documents">
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900">
+                Document #{document.id}
+              </h1>
+              <StatusBadge status={document.status} />
+            </div>
+            <p className="text-slate-500 text-sm mt-1">
+              Created on {formatDate(document.createdAt)}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => checkStatusMutation.mutate(id)}
+            disabled={checkStatusMutation.isPending}
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${
+                checkStatusMutation.isPending ? "animate-spin" : ""
+              }`}
+            />
+            Check Sign Status
+          </Button>
+
+          {document.status === "pending" && (
+            <Button
+              className="btn-primary"
+              onClick={() => approveMutation.mutate(id)}
+              disabled={approveMutation.isPending}
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {approveMutation.isPending
+                ? "Processing..."
+                : "Approve & Send for Signing"}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* ================= MAIN ================= */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* ================= TRANSACTION DETAILS ================= */}
+          <Card className="border-slate-100">
+            <CardHeader>
+              <CardTitle>Transaction Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid sm:grid-cols-2 gap-6">
+                <div>
+                  <dt className="text-sm text-slate-500">
+                    Property Address
+                  </dt>
+                  <dd className="font-semibold">
+                    {meta?.propertyAddress ?? "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-slate-500">
+                    Sale Price
+                  </dt>
+                  <dd className="font-semibold">
+                    {meta?.price ?? "—"}
+                  </dd>
+                </div>
+
+                <div className="sm:col-span-2 border-t pt-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="flex gap-3">
+                      <User className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <p className="text-xs text-slate-500">Buyer</p>
+                        <p className="font-medium">
+                          {meta?.buyerName ?? "—"}
+                        </p>
+                        {meta?.buyerEmail && (
+                          <p className="text-xs text-slate-400">
+                            {meta.buyerEmail}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <UserCheck className="w-5 h-5 text-purple-600" />
+                      <div>
+                        <p className="text-xs text-slate-500">Seller</p>
+                        <p className="font-medium">
+                          {meta?.sellerName ?? "—"}
+                        </p>
+                        {meta?.sellerEmail && (
+                          <p className="text-xs text-slate-400">
+                            {meta.sellerEmail}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+
+          {/* ================= DOCUMENT PREVIEW ================= */}
+          <Card className="border-slate-100">
+            <CardHeader>
+              <CardTitle>Document Preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 min-h-[300px] font-serif text-slate-700 leading-relaxed overflow-auto max-h-[600px]">
+                {renderedTemplate ? (
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: renderedTemplate,
+                    }}
+                    className="prose prose-slate max-w-none"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-slate-400 italic py-12">
+                    <FileText className="w-12 h-12 mb-2 opacity-20" />
+                    <p>No template content available for this document.</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ================= AUDIT LOG ================= */}
+        <div>
+          <Card className="border-slate-100 h-full">
+            <CardHeader>
+              <CardTitle>History & Audit Log</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {logsLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {auditLogs?.length ? (
+                    auditLogs.map((log, idx) => (
+                      <div key={idx}>
+                        <p className="text-sm font-medium">
+                          {log.action}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          by {log.actor}
+                        </p>
+                        <div className="flex items-center gap-1 text-xs text-slate-400">
+                          <Clock className="w-3 h-3" />
+                          {formatDate(log.timestamp, "MMM d, HH:mm")}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">
+                      No activity recorded yet.
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ================= SKELETON ================= */
+function DetailsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-12 w-full" />
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-96 w-full" />
+        </div>
+        <Skeleton className="h-[400px]" />
+      </div>
+    </div>
+  );
+}

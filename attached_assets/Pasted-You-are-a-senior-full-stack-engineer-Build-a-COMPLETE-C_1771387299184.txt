@@ -1,0 +1,226 @@
+You are a senior full-stack engineer.
+
+Build a COMPLETE, CLEAN, and PRODUCTION-STYLE full-stack application for:
+
+“Automated Real Estate Document Generation & E-Signature System”
+
+-------------------------------------------------
+IMPORTANT ARCHITECTURE RULES (MUST FOLLOW)
+-------------------------------------------------
+- Backend is ONLY an API layer
+- ALL automation, document generation, and signing logic is handled by n8n
+- Backend uses Supabase DB only
+- Frontend communicates with:
+  - Backend APIs (DB data)
+  - n8n webhooks (automation)
+- Use environment variables (.env)
+- Do NOT add heavy backend business logic
+- Code must be simple, readable, and well structured
+
+-------------------------------------------------
+N8N WEBHOOK ENDPOINTS (FIXED)
+-------------------------------------------------
+Base URL:
+N8N_BASE_URL=https://n8n.fortivautomation.cloud/webhook-test/prop-flow
+
+1. Create Template
+POST /create-template
+
+2. Generate Document
+POST /document-generate
+
+3. Approve & Send for Signing
+POST /approves-signing
+
+4. Get Signing Status
+GET /get-sign-status
+
+-------------------------------------------------
+TECH STACK
+-------------------------------------------------
+Frontend:
+- React (Vite)
+- Tailwind CSS
+- Axios
+- React Router
+- JWT auth handling
+
+Backend:
+- Node.js
+- Express
+- Supabase (Postgres)
+- JWT authentication
+- Webhook endpoints for n8n callbacks
+
+-------------------------------------------------
+ENV FILE (.env)
+-------------------------------------------------
+PORT=
+
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+N8N_BASE_URL=https://n8n.fortivautomation.cloud/webhook-test/prop-flow
+
+-------------------------------------------------
+DATABASE TABLES (SUPABASE)
+-------------------------------------------------
+users
+templates
+documents
+transactions
+audit_logs
+
+-------------------------------------------------
+BACKEND RESPONSIBILITIES (VERY IMPORTANT)
+-------------------------------------------------
+Backend MUST:
+- Handle auth (signup / signin) simple email & password no jwt  
+- Store & fetch:
+  - templates
+  - documents
+  - transactions
+  - audit logs
+- Expose REST APIs
+- Forward requests to n8n
+- Receive callbacks from n8n
+
+Backend MUST NOT:
+- Generate PDFs
+- Handle signing logic
+- Talk directly to Inkfree
+
+-------------------------------------------------
+BACKEND API ROUTES
+-------------------------------------------------
+Auth:
+POST /api/auth/signup
+POST /api/auth/signin
+
+Templates:
+GET /api/templates
+POST /api/templates
+
+Documents:
+GET /api/documents
+GET /api/documents/:id
+POST /api/documents/:id/approve-signing
+
+Transactions:
+GET /api/transactions
+
+Audit Logs:
+GET /api/audit-logs/:documentId
+
+N8N Callbacks:
+POST /api/webhook/document-status
+POST /api/webhook/audit-log
+
+-------------------------------------------------
+FRONTEND FEATURES
+-------------------------------------------------
+
+1️⃣ AUTHENTICATION
+- Signup & Signin pages
+- JWT stored securely
+- Protected routes
+
+2️⃣ TEMPLATE MANAGEMENT
+- Create template form
+- Fields:
+  - Template name
+  - Document type
+  - Template body (HTML / rich text)
+- On save:
+  - Store in Supabase
+  - Trigger n8n create-template webhook
+
+3️⃣ DOCUMENT GENERATION
+- Form to input:
+  - Buyer details
+  - Seller details
+  - Property details
+  - Price
+- Select a template
+- On submit:
+  - Call backend API
+  - Backend forwards data to:
+    POST {N8N_BASE_URL}/document-generate
+- Store document metadata in Supabase
+
+4️⃣ APPROVE & SIGN FLOW
+- Button: “Approve & Send for Signing”
+- On click:
+  - Backend updates document status = approved
+  - Backend logs audit
+  - Backend calls:
+    POST {N8N_BASE_URL}/approves-signing
+
+5️⃣ SIGNING STATUS
+- Poll or fetch status from backend
+- Backend syncs from:
+  GET {N8N_BASE_URL}/get-sign-status
+- Show:
+  - Pending
+  - Signed
+  - Declined
+
+6️⃣ DASHBOARD
+- Total documents
+- Pending signatures
+- Signed documents
+- Transactions list
+
+7️⃣ AUDIT LOG VIEW
+- Timeline UI per document
+- Show:
+  - Action
+  - Timestamp
+  - Actor
+  - Metadata (IP, device if present)
+
+-------------------------------------------------
+FRONTEND UI PAGES
+-------------------------------------------------
+/login
+/signup
+/dashboard
+/templates
+/documents
+/documents/:id
+/audit-logs/:documentId
+
+-------------------------------------------------
+AXIOS SETUP
+-------------------------------------------------
+- Base URL from env
+- Interceptor for JWT
+- Separate service files:
+  authService
+  templateService
+  documentService
+  auditService
+
+-------------------------------------------------
+CODE QUALITY
+-------------------------------------------------
+- Clean folder structure
+- Clear comments
+- No over-engineering
+- Easy to understand flows
+- README explaining:
+  - Architecture
+  - Why n8n is used
+  - Backend vs Automation responsibilities
+  - How to run project
+
+-------------------------------------------------
+FINAL GOAL
+-------------------------------------------------
+Deliver a demo-ready, scalable, real-world full-stack app where:
+- Backend = thin API + Supabase
+- n8n = automation engine
+- Frontend = clear, professional UI
+- Audit trail & signing status visible end-to-end
+
+DO NOT ADD EXTRA FEATURES.
+FOLLOW THIS SPEC STRICTLY.
